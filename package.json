@@ -15,13 +15,22 @@
     "type": "git",
     "url": "https://github.com/yieme/proxy-cache-file"
   },
-  "keywords": ["proxy","cache","file"],
+  "keywords": [
+    "proxy",
+    "cache",
+    "file"
+  ],
   "author": "Yieme",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/yieme/proxy-cache-file/issues"
   },
-  "dependencies": {   },
+  "dependencies": {
+    "MD5": "^1.2.1",
+    "make-error": "^1.0.2",
+    "mkdirp": "^0.5.0",
+    "request": "^2.55.0"
+  },
   "devDependencies": {
     "object-attributes": "~0.1.1",
     "chai": "~1.10.0"
