@@ -8,6 +8,7 @@
  */
 
 'use strict';
+var _              = require('lodash')
 var fs             = require('fs')
 var mkdirp         = require('mkdirp')
 var MD5            = require('MD5')
@@ -38,8 +39,12 @@ function proxyCacheFile(req, callback) {
       if (options.dir) {
         mkdirp.sync(options.dir)
       }
+      options = _.extend(options, req)
     }
-    if (!req.url) return proxyCacheFile
+    if (!req.url) {
+      return proxyCacheFile
+      options = _.extend(options, req)
+    }
   }
   req.dir = req.dir || options.dir
 
