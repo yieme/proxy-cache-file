@@ -1,10 +1,10 @@
 'use strict';
 
 
-/** Proxy cache middleware for Express
+/** Proxy and cache a file and related headers
  *
  *  @copyright  Copyright (C) 2015 by Yieme
- *  @module     proxy-cache-middleware
+ *  @module     proxyCacheFile
  */
 
 'use strict';
@@ -42,8 +42,8 @@ function proxyCacheFile(req, callback) {
       options = _.extend(options, req)
     }
     if (!req.url) {
-      return proxyCacheFile
       options = _.extend(options, req)
+      return proxyCacheFile
     }
   }
   req.dir = req.dir || options.dir
