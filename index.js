@@ -16,7 +16,7 @@ var request        = require('request')
 var path           = require('path')
 var forwardHeaders = ['content-type', 'content-encoding']
 var options        = {
-  dir:  '/tmp' // falsely to disable file cache
+  dir:       '/tmp', // falsely to disable file cache
 }
 
 var ProxyCacheFileError = require('make-error')('ProxyCacheFileError')
@@ -24,7 +24,7 @@ var ProxyCacheFileError = require('make-error')('ProxyCacheFileError')
 
 /*
 @param {object} request || config
-- request contains: { url: 'https://domain.com/path/to/file', gzip: false }
+- request contains: { url: 'https://domain.com/path/to/file', gzip: false, returnUrl: false }
 - config contails:  { cacheDir: '/tmp' }
 @param {function} callback
 @return {object} result - { header: [{name:'', value: ''}], data: data || , piped: pipeData }
@@ -75,7 +75,9 @@ function proxyCacheFile(req, callback) {
       response.on('data', function(data) {
 //        console.log(req.url, 'received ' + data.length + ' bytes of compressed data', typeof data) // TODO: add logging option
         if (filePath) cacheFile(filePath, fileHeaders, data)
-        callback(null, { headers: fileHeaders, data: data, isBuffer: true })
+        var result = { headers: fileHeaders, data: data, isBuffer: true }
+        if (req.returnUrl) result.url = req.url
+        callback(null, result)
       })
     })
   }
@@ -88,7 +90,9 @@ function proxyCacheFile(req, callback) {
 //          console.log(filePath, 'from cache') // TODO: add logging option
           headers = JSON.parse(headers)
           var readStream = fs.createReadStream(filePath)
-          callback(null, { headers: headers, data: readStream })
+          var result = { headers: headers, data: readStream }
+          if (req.returnUrl) result.url = req.url
+          callback(null, result)
         })
       } else {
         tryProxy(filePath)
@@ -97,7 +101,7 @@ function proxyCacheFile(req, callback) {
   }
 
   if (!req.url) {
-    callback(new ProxyCacheFileError('Missing URL'))
+    callback('Missing req.url')
   } else if (req.url.indexOf('..') < 0) {
 		if (req.dir) {
       tryFileCache(path.normalize(req.dir + '/' + MD5(req.url + (req.gzip) ? '.gz' : '')))
@@ -105,7 +109,7 @@ function proxyCacheFile(req, callback) {
       tryProxy(req)
     }
 	} else {
-		callback(new ProxyCacheFileError('Invalid URL: ' + req.url))
+		callback('Invalid req.url: ' + req.url)
 	}
 }
 
