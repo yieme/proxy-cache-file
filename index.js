@@ -32,7 +32,6 @@ var ProxyCacheFileError = require('make-error')('ProxyCacheFileError')
 function proxyCacheFile(req, callback) {
   if ('string' === typeof req) req = { url: req }
   req = req || {}
-  console.log('req:', req)
   if ('undefined' !== typeof req.dir) {
     if (options.dir != req.dir) {
       options.dir = req.dir
@@ -74,7 +73,7 @@ function proxyCacheFile(req, callback) {
       }
 //      if (cache.control) fileHeaders.push({ name: 'cache-control', value: 'public, max-age=' + cache.control })
       response.on('data', function(data) {
-        console.log(req.url, 'received ' + data.length + ' bytes of compressed data', typeof data)
+//        console.log(req.url, 'received ' + data.length + ' bytes of compressed data', typeof data) // TODO: add logging option
         if (filePath) cacheFile(filePath, fileHeaders, data)
         callback(null, { headers: fileHeaders, data: data, isBuffer: true })
       })
@@ -86,7 +85,7 @@ function proxyCacheFile(req, callback) {
       if (exists) {
         fs.readFile(filePath + '.json', 'utf8', function(err, headers) {
           if (err) throw new Error(err)
-          console.log(filePath, 'from cache')
+//          console.log(filePath, 'from cache') // TODO: add logging option
           headers = JSON.parse(headers)
           var readStream = fs.createReadStream(filePath)
           callback(null, { headers: headers, data: readStream })
