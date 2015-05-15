@@ -14,7 +14,7 @@ var mkdirp         = require('mkdirp')
 var MD5            = require('MD5')
 var request        = require('request')
 var path           = require('path')
-var forwardHeaders = ['content-type', 'content-encoding']
+var forwardHeaders = ['content-type']
 var options        = {
   dir:       './tmp', // falsely to disable file cache
 }
@@ -25,7 +25,7 @@ var ProxyCacheFileError = require('make-error')('ProxyCacheFileError')
 
 /*
 @param {object} request || config
-- request contains: { url: 'https://domain.com/path/to/file', gzip: false, returnUrl: false }
+- request contains: { url: 'https://domain.com/path/to/file', returnUrl: false }
 - config contails:  { cacheDir: '/tmp' }
 @param {function} callback
 @return {object} result - { header: [{name:'', value: ''}], data: data || , piped: pipeData }
@@ -74,7 +74,7 @@ function proxyCacheFile(req, callback) {
   }
 
   function tryProxy(filePath) {
-    var param = { method: 'GET', gzip: req.gzip, uri: req.url }
+    var param = { method: 'GET', gzip: true, uri: req.url }
     request(param, function (error, response, body) {
       if (error) return callback(error)
       var headers       = response.headers
@@ -115,7 +115,7 @@ function proxyCacheFile(req, callback) {
   if (!req.url)                   return callback(new ProxyCacheFileError('Missing req.url'))
   if (req.url.indexOf('..') >= 0) return callback(new ProxyCacheFileError('Invalid req.url: ' + req.url))
 	if (req.dir) {
-    tryFileCache(path.normalize(req.dir + '/' + MD5(req.url + (req.gzip) ? '.gz' : '')))
+    tryFileCache(path.normalize(req.dir + '/' + MD5(req.url)))
 	} else {
     tryProxy(req)
   }

@@ -33,7 +33,6 @@ proxyCacheFile(url, function(err, proxyData) {
 	if (err) throw err
 	console.log(proxyData)
 })
-
 ```
 
 ```js
