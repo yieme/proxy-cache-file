@@ -87,7 +87,7 @@ function proxyCacheFile(req, callback) {
         }
       }
       if (filePath) cacheFile(filePath, fileHeaders, body)
-      var result = { headers: fileHeaders, data: body }
+      var result = { headers: fileHeaders, body: body }
       if (req.returnUrl) result.url = req.url
       callback(null, result)
     })
@@ -99,9 +99,9 @@ function proxyCacheFile(req, callback) {
         fs.readFile(filePath + '.json', 'utf8', function(err, headers) {
           if (err) return callback(err)
           headers = JSON.parse(headers)
-          fs.readFile(filePath, 'utf8', function(err, data) {
+          fs.readFile(filePath, 'utf8', function(err, body) {
             if (err) return callback(err)
-            var result = { headers: headers, data: data, cached: true }
+            var result = { headers: headers, body: body, cached: true }
             if (req.returnUrl) result.url = req.url
             callback(null, result)
           })
