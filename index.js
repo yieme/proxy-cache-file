@@ -14,7 +14,6 @@ var mkdirp         = require('mkdirp')
 var MD5            = require('MD5')
 var request        = require('request')
 var path           = require('path')
-var forwardHeaders = ['content-type']
 var options        = {
   dir:       './tmp', // falsely to disable file cache
 }
@@ -78,13 +77,11 @@ function proxyCacheFile(req, callback) {
     request(param, function (error, response, body) {
       if (error) return callback(error)
       var headers       = response.headers
-      var fileHeaders    = []
-      for (var i=0, len = forwardHeaders.length; i < len; i++) {
-        var headerName  = forwardHeaders[i]
-        var header      = headers[headerName]
-        if (header) {
-          fileHeaders.push({ name: headerName, value: header })
-        }
+      var fileHeaders   = {
+        type: headers['content-type']
+      }
+      if (response.statusCode != 200) {
+        fileHeaders.code = response.statusCode
       }
       if (filePath) cacheFile(filePath, fileHeaders, body)
       var result = { headers: fileHeaders, body: body }

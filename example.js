@@ -8,7 +8,7 @@ process.on('uncaughtException', function (err) {
 	console.log('stack:', err.stack)
 })
 
-proxyCacheFile(url, function(err, proxyData) {
+proxyCacheFile(url, function(err, data) {
 	if (err) throw err
-	console.log(proxyData)
+	console.log(data)
 })
