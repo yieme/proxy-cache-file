@@ -76,15 +76,16 @@ function proxyCacheFile(req, callback) {
     var param = { method: 'GET', gzip: true, uri: req.url }
     request(param, function (error, response, body) {
       if (error) return callback(error)
-      var headers       = response.headers
-      var fileHeaders   = {
-        type: headers['content-type']
+      var headers   = {
+        type: response.headers['content-type']
       }
-      if (response.statusCode != 200) {
-        fileHeaders.code = response.statusCode
+      var result = { headers: headers }
+      if (response.statusCode == 200) {
+        if (filePath) cacheFile(filePath, headers, body)
+        result.body = body
+      } else {
+        result.headers.code = response.statusCode
       }
-      if (filePath) cacheFile(filePath, fileHeaders, body)
-      var result = { headers: fileHeaders, body: body }
       if (req.returnUrl) result.url = req.url
       callback(null, result)
     })
@@ -96,10 +97,12 @@ function proxyCacheFile(req, callback) {
         fs.readFile(filePath + '.json', 'utf8', function(err, headers) {
           if (err) return callback(err)
           headers = JSON.parse(headers)
+          var result = { headers: headers, cached: 'file' }
+          if (req.returnUrl) result.url = req.url
+          if (headers.code) return callback(null, result)
           fs.readFile(filePath, 'utf8', function(err, body) {
             if (err) return callback(err)
-            var result = { headers: headers, body: body, cached: true }
-            if (req.returnUrl) result.url = req.url
+            result.body = body
             callback(null, result)
           })
         })
