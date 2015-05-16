@@ -72,6 +72,10 @@ function proxyCacheFile(req, callback) {
     }
   }
 
+  function errorBody(code) {
+    return (code) ? JSON.stringify({ code: code, message: 'Unable to proxy: ' + req.url }) : ''
+  }
+
   function tryProxy(filePath) {
     var param = { method: 'GET', gzip: true, uri: req.url }
     request(param, function (error, response, body) {
@@ -85,6 +89,7 @@ function proxyCacheFile(req, callback) {
         result.body = body
       } else {
         result.headers.code = response.statusCode
+        result.body = errorBody(response.statusCode)
       }
       if (req.returnUrl) result.url = req.url
       callback(null, result)
@@ -97,7 +102,7 @@ function proxyCacheFile(req, callback) {
         fs.readFile(filePath + '.json', 'utf8', function(err, headers) {
           if (err) return callback(err)
           headers = JSON.parse(headers)
-          var result = { headers: headers, cached: 'file' }
+          var result = { headers: headers, body: errorBody(headers.code), cached: 'file' }
           if (req.returnUrl) result.url = req.url
           if (headers.code) return callback(null, result)
           fs.readFile(filePath, 'utf8', function(err, body) {
