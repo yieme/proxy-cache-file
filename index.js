@@ -88,6 +88,7 @@ function proxyCacheFile(req, callback) {
         if (filePath) cacheFile(filePath, headers, body)
         result.body = body
       } else {
+        result.headers.type = 'application/json'
         result.headers.code = response.statusCode
         result.body = errorBody(response.statusCode)
       }
