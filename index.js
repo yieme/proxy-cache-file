@@ -103,7 +103,7 @@ function proxyCacheFile(req, callback) {
         fs.readFile(filePath + '.json', 'utf8', function(err, headers) {
           if (err) return callback(err)
           headers = JSON.parse(headers)
-          var result = { headers: headers, body: errorBody(headers.code), cached: 'file' }
+          var result = { headers: headers, body: errorBody(headers.code), cache: 'file' }
           if (req.returnUrl) result.url = req.url
           if (headers.code) return callback(null, result)
           fs.readFile(filePath, 'utf8', function(err, body) {
