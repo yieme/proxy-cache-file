@@ -117,7 +117,10 @@ function proxyCacheFile(req, callback) {
       }
     })
   }
-
+  if (options.logRequest) {
+    var logger = (req.locals && req.locals._log) ? req.locals._log : console
+    logger.info('proxyCacheFile:', req.url)
+  }
   if (!req.url)                   return callback(new ProxyCacheFileError('Missing req.url'))
   if (req.url.indexOf('..') >= 0) return callback(new ProxyCacheFileError('Invalid req.url: ' + req.url))
 	if (req.dir) {
