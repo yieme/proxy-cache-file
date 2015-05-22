@@ -94,7 +94,7 @@ function proxyCacheFile(req, callback) {
     options.logger.debug('tryProxy: ' + req.url)
 
     request.head(req.url).end(function tryProxyHead(err, res) {
-      if (err) return callback(err)
+      if (err) return callback(err.message)
       var headers   = {
         code: res.status,
         type: res.type
@@ -106,13 +106,17 @@ function proxyCacheFile(req, callback) {
         return callback(null, result)
       }
       if (req.asStream) {
-        var stream = request.get(req.url)
+        try {
+          var stream = request.get(req.url)
+        } catch (err) {
+          return callback(err.message)
+        }
         cacheFile(filePath, headers, stream)
         result.stream = stream
         callback(null, result)
       } else {
         request.get(req.url).buffer().end(function (err, res) {
-          if (err) return callback(err)
+          if (err) return callback(err.message)
           cacheFile(filePath, headers, res.text)
           result.body = res.text
           callback(null, result)
