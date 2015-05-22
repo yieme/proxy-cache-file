@@ -100,6 +100,7 @@ function proxyCacheFile(req, callback) {
         type: res.type
       }
       var result = { headers: headers }
+      if (req.returnUrl) result.url = req.url
       if (!res.ok) {
         result.body = errorBody(res.status)
         return callback(null, result)
