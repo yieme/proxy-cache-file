@@ -35,8 +35,9 @@ var dirExists = { }
 */
 function proxyCacheFile(req, callback) {
   function callbackError(param) {
-    param.in = (param.in) ? 'proxyCacheFile' + '.' + param.in : 'proxyCacheFile'
-    logger.info(JSON.stringify(param))
+    param.in  = (param.in) ? 'proxyCacheFile' + '.' + param.in : 'proxyCacheFile'
+    param.url = req.url
+    logger.warn(JSON.stringify(param))
     return callback('{ "code": 404, "error": "Not Found" }')
   }
   if ('string' === typeof req) req = { url: req }
@@ -97,7 +98,7 @@ function proxyCacheFile(req, callback) {
     options.logger.debug('tryProxy: ' + req.url)
 
     request.head(req.url).end(function tryProxyHead(err, res) {
-      if (err) return callbackError({ in:'tryProxy.head', err: err, url: req.url })
+      if (err) return callbackError({ in:'tryProxy.head', err: err })
       var headers   = {
         code: res.status,
         type: res.type
@@ -119,7 +120,7 @@ function proxyCacheFile(req, callback) {
         callback(null, result)
       } else {
         request.get(req.url).buffer().end(function (err, res) {
-          if (err) return callbackError({ in: 'proxyCacheFile.tryProxy.request.get', err: err, url: req.url })
+          if (err) return callbackError({ in: 'proxyCacheFile.tryProxy.request.get', err: err })
           cacheFile(filePath, headers, res.text)
           result.body = res.text
           callback(null, result)
@@ -156,8 +157,8 @@ function proxyCacheFile(req, callback) {
     })
   }
 
-  if (!req.url)                   return callbackError({ err: 'Missing req.url', url: req.url })
-  if (req.url.indexOf('..') >= 0) return callbackError({ err: 'Invalid req.url', url: req.url })
+  if (!req.url)                   return callbackError({ err: 'Missing req.url' })
+  if (req.url.indexOf('..') >= 0) return callbackError({ err: 'Invalid req.url' })
 	if (req.dir) {
     tryFileCache(path.normalize(req.dir + '/' + MD5(req.url)))
 	} else {
