@@ -25,8 +25,6 @@ var options        = {
 }
 var dirExists = { }
 
-var ProxyCacheFileError = require('make-error')('ProxyCacheFileError')
-
 
 /*
 @param {object} request || config
@@ -36,6 +34,11 @@ var ProxyCacheFileError = require('make-error')('ProxyCacheFileError')
 @return {object} result - { header: [{name:'', value: ''}], data: data || , piped: pipeData }
 */
 function proxyCacheFile(req, callback) {
+  function callbackError(param) {
+    param.in = (param.in) ? 'proxyCacheFile' + '.' + param.in : 'proxyCacheFile'
+    logger.info(JSON.stringify(param))
+    return callback('{ "code": 404, "error": "Not Found" }')
+  }
   if ('string' === typeof req) req = { url: req }
   req = req || {}
   if ('undefined' !== typeof req.dir) {
@@ -58,14 +61,14 @@ function proxyCacheFile(req, callback) {
     function writeFile() {
       if ('string' == typeof data) {
         fs.writeFile(filePath, data, 'utf-8', function(err) {
-          if (err) return callback(err)
+          if (err) return callbackError({ in:'cachefile.writeFile', err: err, file: filePath })
         })
       } else {
         var writeStream = fs.createWriteStream(filePath)
         data.pipe(writeStream)
       }
       fs.writeFile(filePath + '.json', JSON.stringify(headers), 'utf-8', function(err) {
-        if (err) return callback(err)
+        if (err) return callbackError({ in: 'cachefile.writeFile', err: err, file: filePath + '.json' })
       })
     }
 
@@ -77,7 +80,7 @@ function proxyCacheFile(req, callback) {
           writeFile()
         } else {
           mkdirp(options.dir, function (err) {
-            if (err) return callback(err)
+            if (err) return callbackError({ in:'cachefile.mkdirp', err: err, dir: options.dir })
             dirExists[options.dir] = true
             writeFile()
           })
@@ -94,7 +97,7 @@ function proxyCacheFile(req, callback) {
     options.logger.debug('tryProxy: ' + req.url)
 
     request.head(req.url).end(function tryProxyHead(err, res) {
-      if (err) return callback(err.message)
+      if (err) return callbackError({ in:'tryProxy.head', err: err, url: req.url })
       var headers   = {
         code: res.status,
         type: res.type
@@ -109,14 +112,14 @@ function proxyCacheFile(req, callback) {
         try {
           var stream = request.get(req.url)
         } catch (err) {
-          return callback(err.message)
+          return callbackError({ in:'tryProxy.stream', err: err, url: req.url })
         }
         cacheFile(filePath, headers, stream)
         result.stream = stream
         callback(null, result)
       } else {
         request.get(req.url).buffer().end(function (err, res) {
-          if (err) return callback(err.message)
+          if (err) return callbackError({ in: 'proxyCacheFile.tryProxy.request.get', err: err, url: req.url })
           cacheFile(filePath, headers, res.text)
           result.body = res.text
           callback(null, result)
@@ -131,7 +134,7 @@ function proxyCacheFile(req, callback) {
     fs.exists(filePath, function(exists) {
       if (exists) {
         fs.readFile(filePath + '.json', 'utf-8', function(err, headers) {
-          if (err) return callback(err)
+          if (err) return callbackError({ in: 'tryFileCache.readFile.json', err: err, file: filePath + '.json' })
           headers = JSON.parse(headers)
           var result = { headers: headers, body: errorBody(headers.code), cache: 'file' }
           if (req.returnUrl) result.url = req.url
@@ -141,7 +144,7 @@ function proxyCacheFile(req, callback) {
             callback(null, result)
           } else {
             fs.readFile(filePath, 'utf-8', function(err, body) {
-              if (err) return callback(err)
+              if (err) return callbackError({ in: 'tryFileCache.readFile', err: err, file: filePath })
               result.body = body
               callback(null, result)
             })
@@ -153,8 +156,8 @@ function proxyCacheFile(req, callback) {
     })
   }
 
-  if (!req.url)                   return callback('Missing req.url')
-  if (req.url.indexOf('..') >= 0) return callback('Invalid req.url: ' + req.url)
+  if (!req.url)                   return callbackError({ err: 'Missing req.url', url: req.url })
+  if (req.url.indexOf('..') >= 0) return callbackError({ err: 'Invalid req.url', url: req.url })
 	if (req.dir) {
     tryFileCache(path.normalize(req.dir + '/' + MD5(req.url)))
 	} else {
