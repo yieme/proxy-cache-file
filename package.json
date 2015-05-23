@@ -1,6 +1,6 @@
 {
   "name": "proxy-cache-file",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "Proxy and cache a file and related headers",
   "main": "index.js",
   "scripts": {
