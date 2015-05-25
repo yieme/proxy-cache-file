@@ -38,8 +38,9 @@ function proxyCacheFile(req, callback) {
     param.in  = (param.in) ? 'proxyCacheFile' + '.' + param.in : 'proxyCacheFile'
     param.url = req.url
     logger.warn(JSON.stringify(param))
-    return callback('{ "code": 404, "error": "Not Found" }')
+    return callback(null, { headers: { code: 404 }, body: '{ "error": "Not Found" }' })
   }
+
   if ('string' === typeof req) req = { url: req }
   req = req || {}
   if ('undefined' !== typeof req.dir) {
